@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://p4a4yh4md38n"]
+[gd_scene load_steps=9 format=3 uid="uid://p4a4yh4md38n"]
 
 [ext_resource type="PackedScene" uid="uid://bw3megsg6ajjt" path="res://Objects/Player/player.tscn" id="1_0eoc4"]
 
@@ -7,6 +7,22 @@ albedo_color = Color(0.329412, 0.737255, 0.784314, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_onahw"]
 albedo_color = Color(1, 0.235294, 1, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_vkod7"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_6xo5b"]
+seamless = true
+noise = SubResource("FastNoiseLite_vkod7")
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_gjw48"]
+sky_cover = SubResource("NoiseTexture2D_6xo5b")
+
+[sub_resource type="Sky" id="Sky_7mxia"]
+sky_material = SubResource("ProceduralSkyMaterial_gjw48")
+
+[sub_resource type="Environment" id="Environment_n4opm"]
+background_mode = 2
+sky = SubResource("Sky_7mxia")
 
 [node name="General" type="Node3D"]
 
@@ -28,3 +44,6 @@ shadow_enabled = true
 shadow_opacity = 0.75
 
 [node name="Player" parent="." instance=ExtResource("1_0eoc4")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_n4opm")
