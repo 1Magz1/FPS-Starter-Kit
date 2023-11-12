@@ -30,9 +30,11 @@ const movement_list = {
 }
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 var input_movement = Vector2.ZERO
+var direction = Vector3.ZERO
 var current_movement_state = MovementState.Idle
 var is_walk_btn_pressed = false
 var is_crouch_btn_pressed = false
+const lerp_speed = 10.0
 
 func _ready():
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -42,7 +44,7 @@ func _physics_process(delta):
 	toogle_switch(action_list.CROUCH)
 	set_movement_state()
 	handle_jump(delta)
-	handle_movement()
+	handle_movement(delta)
 	move_and_slide()
 
 func _unhandled_input(event):
@@ -52,13 +54,13 @@ func _unhandled_input(event):
 		camera.rotate_x(-event.relative.y * SENSITIVITY)
 		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-60), deg_to_rad(80))
 
-func handle_movement():
+func handle_movement(delta):
 	var input := Input.get_vector(
 		movement_list.LEFT,
 		movement_list.RIGHT,
 		movement_list.FORWARD,
 		movement_list.BACK)
-	var direction = (head.transform.basis * Vector3(input.x, 0 , input.y)).normalized()
+	direction = lerp(direction, (head.transform.basis * Vector3(input.x, 0 , input.y)).normalized(), delta * lerp_speed)
 	var current_speed = 0
 	
 	match current_movement_state:
@@ -79,7 +81,7 @@ func handle_jump(delta):
 		velocity.y = JUMP_VELOCITY
 	elif Input.is_action_just_pressed(action_list.JUMP) and velocity.y >= JUMP_VELOCITY * DOUBLE_JUMP_TRESHOLD:
 		velocity.y = JUMP_VELOCITY * DOUBLE_JUMP_ACC
-	elif not is_on_floor():
+	elif !is_on_floor():
 		velocity.y -= JUMP_VELOCITY * delta
 
 func set_movement_state():
