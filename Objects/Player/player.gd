@@ -1,20 +1,37 @@
 extends CharacterBody3D
 
-@export var SPEED = 5
+@export var RUN_SPEED = 5
+@export var WOLK_SPEED = 2.5
 @export var SENSITIVITY = 0.005
 @export var JUMP_VELOCITY = 4.5
 @export var DOUBLE_JUMP_TRESHOLD = 0.65
 @export var DOUBLE_JUMP_ACC = 1.3
 
-@onready var head = $Head
-@onready var camera = $Head/Camera
+@onready var head: Node3D = $Head
+@onready var camera: Camera3D = $Head/Camera
+
+enum MovementState {
+	Idle,
+	Walk,
+	Run,
+	Crouch
+}
+const action_list = {
+	'WALK': 'action_walk'
+}
+var current_movement_state = MovementState.Idle
+var is_walk_btn_pressed = false
+
 
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
+var input_movement = Vector2.ZERO
 
 func _ready():
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _physics_process(delta):
+	toogle_switch("action_walk")
+	set_movement_state()
 	handle_jump(delta)
 	handle_movement()
 	move_and_slide()
@@ -28,16 +45,41 @@ func _unhandled_input(event):
 
 func handle_movement():
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	
 	var direction = (head.transform.basis * Vector3(input.x, 0 , input.y)).normalized()
+	var current_speed = 0
 	
-	velocity.x = direction.x * SPEED
-	velocity.z = direction.z * SPEED
+	match current_movement_state:
+		MovementState.Idle:
+			current_speed = 0
+		MovementState.Walk:
+			current_speed = WOLK_SPEED
+		MovementState.Run:
+			current_speed = RUN_SPEED
+	
+	velocity.x = direction.x * current_speed
+	velocity.z = direction.z * current_speed
 
 func handle_jump(delta):
-	if Input.is_action_just_pressed("jump") and is_on_floor():
+	if Input.is_action_just_pressed("action_jump") and is_on_floor():
 		velocity.y = JUMP_VELOCITY
-	elif Input.is_action_just_pressed("jump") and velocity.y >= JUMP_VELOCITY * DOUBLE_JUMP_TRESHOLD:
+	elif Input.is_action_just_pressed("action_jump") and velocity.y >= JUMP_VELOCITY * DOUBLE_JUMP_TRESHOLD:
 		velocity.y = JUMP_VELOCITY * DOUBLE_JUMP_ACC
 	elif not is_on_floor():
 		velocity.y -= JUMP_VELOCITY * delta
+
+func set_movement_state():
+	input_movement = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var is_idle = input_movement == Vector2.ZERO
+	
+	if is_idle:
+		current_movement_state = MovementState.Idle
+	elif is_walk_btn_pressed and !is_idle:
+		current_movement_state = MovementState.Walk
+	elif Input.is_action_pressed("action_crouch") and !is_idle:
+		current_movement_state = MovementState.Crouch
+	elif !is_walk_btn_pressed and !is_idle:
+		current_movement_state = MovementState.Run
+
+func toogle_switch(action_name: StringName):
+	if Input.is_action_just_pressed(action_name) and action_name == action_list['WALK']:
+		is_walk_btn_pressed = !is_walk_btn_pressed
