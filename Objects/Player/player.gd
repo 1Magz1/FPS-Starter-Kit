@@ -20,6 +20,7 @@ enum MovementState {
 const action_list = {
 	'WALK': 'action_walk',
 	'CROUCH': 'action_crouch',
+	'JUMP': 'action_jump',
 }
 const movement_list = {
 	'LEFT': 'move_left',
@@ -52,7 +53,11 @@ func _unhandled_input(event):
 		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-60), deg_to_rad(80))
 
 func handle_movement():
-	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var input := Input.get_vector(
+		movement_list.LEFT,
+		movement_list.RIGHT,
+		movement_list.FORWARD,
+		movement_list.BACK)
 	var direction = (head.transform.basis * Vector3(input.x, 0 , input.y)).normalized()
 	var current_speed = 0
 	
@@ -70,9 +75,9 @@ func handle_movement():
 	velocity.z = direction.z * current_speed
 
 func handle_jump(delta):
-	if Input.is_action_just_pressed("action_jump") and is_on_floor():
+	if Input.is_action_just_pressed(action_list.JUMP) and is_on_floor():
 		velocity.y = JUMP_VELOCITY
-	elif Input.is_action_just_pressed("action_jump") and velocity.y >= JUMP_VELOCITY * DOUBLE_JUMP_TRESHOLD:
+	elif Input.is_action_just_pressed(action_list.JUMP) and velocity.y >= JUMP_VELOCITY * DOUBLE_JUMP_TRESHOLD:
 		velocity.y = JUMP_VELOCITY * DOUBLE_JUMP_ACC
 	elif not is_on_floor():
 		velocity.y -= JUMP_VELOCITY * delta
