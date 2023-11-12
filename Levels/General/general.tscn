@@ -40,6 +40,12 @@ material_override = SubResource("StandardMaterial3D_onahw")
 use_collision = true
 size = Vector3(3, 3, 3)
 
+[node name="CSGBox3D3" type="CSGBox3D" parent="Map"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 2.24571, 4.18)
+material_override = SubResource("StandardMaterial3D_onahw")
+use_collision = true
+size = Vector3(3, 1, 3)
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.422618, -0.694272, 0.582563, 2.24196e-16, 0.642788, 0.766044, -0.906308, 0.323744, -0.271654, 0, 0, 0)
 shadow_enabled = true
