@@ -11,6 +11,9 @@ extends CharacterBody3D
 
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera
+@onready var idle_collision = $IdleCollision
+@onready var crouch_collision = $CrouchCollision
+@onready var ray_cast = $RayCast
 
 enum MovementState {
 	Idle,
@@ -27,7 +30,7 @@ const movement_list = {
 	'LEFT': 'move_left',
 	'RIGHT': 'move_right',
 	'FORWARD': 'move_forward',
-	'BACK': 'move_back'
+	'BACK': 'move_backward'
 }
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 var input_movement = Vector2.ZERO
@@ -56,45 +59,18 @@ func _unhandled_input(event):
 		camera.rotate_x(-event.relative.y * SENSITIVITY)
 		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-85), deg_to_rad(85))
 
-func handle_movement(delta):
-	var input := Input.get_vector(
-		movement_list.LEFT,
-		movement_list.RIGHT,
-		movement_list.FORWARD,
-		movement_list.BACK)
-	direction = lerp(direction, (head.transform.basis * Vector3(input.x, 0 , input.y)).normalized(), delta * lerp_speed)
-	var current_speed = 0
+func toogle_switch(action_name: StringName):
+	var is_pressed = Input.is_action_just_pressed(action_name)
+	var is_walk = action_name == action_list.WALK
+	var is_crouch = action_name == action_list.CROUCH
 	
-	match current_movement_state:
-		MovementState.Idle:
-			current_speed = 0
-		MovementState.Walk:
-			current_speed = WOLK_SPEED
-		MovementState.Run:
-			current_speed = RUN_SPEED
-		MovementState.Crouch:
-			current_speed = CROUCH_SPEED
-	
-	velocity.x = direction.x * current_speed
-	velocity.z = direction.z * current_speed
-	if current_movement_state == MovementState.Crouch:
-		head.position.y = lerp(head.position.y, 1.3, delta * lerp_speed)
-	else:
-		head.position.y = lerp(head.position.y, 1.8, delta * lerp_speed)
-
-func handle_jump(delta):
-	var is_pressed = Input.is_action_just_pressed(action_list.JUMP)
-	
-	if is_pressed and is_on_floor():
-		velocity.y = JUMP_VELOCITY
-		current_jump_amount += 1
-	elif is_pressed and current_jump_amount < JUMP_AMOUNT:
-		velocity.y = JUMP_VELOCITY * JUMP_ACC * current_jump_amount
-		current_jump_amount += 1
-	elif !is_on_floor():
-		velocity.y -= JUMP_VELOCITY * delta
-	elif is_on_floor():
-		current_jump_amount = 0
+	if is_pressed and is_walk:
+		is_walk_btn_pressed = !is_walk_btn_pressed
+	elif is_pressed and is_crouch:
+		if ray_cast.is_colliding():
+			is_crouch_btn_pressed = is_crouch_btn_pressed
+		else:
+			is_crouch_btn_pressed = !is_crouch_btn_pressed
 
 func set_movement_state():
 	input_movement = Input.get_vector(
@@ -113,8 +89,46 @@ func set_movement_state():
 	elif is_idle:
 		current_movement_state = MovementState.Idle
 
-func toogle_switch(action_name: StringName):
-	if Input.is_action_just_pressed(action_name) and action_name == action_list.WALK:
-		is_walk_btn_pressed = !is_walk_btn_pressed
-	elif Input.is_action_just_pressed(action_name) and action_name == action_list.CROUCH:
-		is_crouch_btn_pressed = !is_crouch_btn_pressed
+func handle_jump(delta):
+	var is_pressed = Input.is_action_just_pressed(action_list.JUMP)
+	
+	if is_pressed and is_on_floor():
+		velocity.y = JUMP_VELOCITY
+		current_jump_amount += 1
+	elif is_pressed and current_jump_amount < JUMP_AMOUNT:
+		velocity.y = JUMP_VELOCITY * JUMP_ACC * current_jump_amount
+		current_jump_amount += 1
+	elif !is_on_floor():
+		velocity.y -= JUMP_VELOCITY * delta
+	elif is_on_floor():
+		current_jump_amount = 0
+
+func handle_movement(delta):
+	var move_transform = (head.transform.basis * Vector3(input_movement.x, 0 , input_movement.y)).normalized()
+	direction = lerp(direction, move_transform, delta * lerp_speed)
+	
+	velocity.x = direction.x * get_current_speed()
+	velocity.z = direction.z * get_current_speed()
+	
+	if current_movement_state == MovementState.Crouch:
+		head.position.y = lerp(head.position.y, 1.3, delta * lerp_speed)
+		idle_collision.disabled = true
+		crouch_collision.disabled = false
+	else:
+		head.position.y = lerp(head.position.y, 1.8, delta * lerp_speed)
+		idle_collision.disabled = false
+		crouch_collision.disabled = true
+
+func get_current_speed()-> int:
+	var current_speed = 0
+	
+	match current_movement_state:
+		MovementState.Idle:
+			current_speed = 0
+		MovementState.Walk:
+			current_speed = WOLK_SPEED
+		MovementState.Run:
+			current_speed = RUN_SPEED
+		MovementState.Crouch:
+			current_speed = CROUCH_SPEED
+	return current_speed
