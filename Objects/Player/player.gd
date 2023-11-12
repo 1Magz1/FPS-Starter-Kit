@@ -75,6 +75,10 @@ func handle_movement(delta):
 	
 	velocity.x = direction.x * current_speed
 	velocity.z = direction.z * current_speed
+	if current_movement_state == MovementState.Crouch:
+		head.position.y = lerp(head.position.y, 1.3, delta * lerp_speed)
+	else:
+		head.position.y = lerp(head.position.y, 1.8, delta * lerp_speed)
 
 func handle_jump(delta):
 	if Input.is_action_just_pressed(action_list.JUMP) and is_on_floor():
@@ -92,14 +96,14 @@ func set_movement_state():
 		movement_list.BACK)
 	var is_idle = input_movement == Vector2.ZERO
 	
-	if is_idle:
-		current_movement_state = MovementState.Idle
+	if is_crouch_btn_pressed:
+		current_movement_state = MovementState.Crouch
 	elif is_walk_btn_pressed and !is_idle:
 		current_movement_state = MovementState.Walk
-	elif is_crouch_btn_pressed and !is_idle:
-		current_movement_state = MovementState.Crouch
 	elif !is_walk_btn_pressed and !is_idle:
 		current_movement_state = MovementState.Run
+	elif is_idle:
+		current_movement_state = MovementState.Idle
 
 func toogle_switch(action_name: StringName):
 	if Input.is_action_just_pressed(action_name) and action_name == action_list.WALK:
