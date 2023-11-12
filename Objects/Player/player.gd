@@ -1,7 +1,8 @@
 extends CharacterBody3D
 
 @export var RUN_SPEED = 5
-@export var WOLK_SPEED = 2.5
+@export var WOLK_SPEED = 3
+@export var CROUCH_SPEED = 2
 @export var SENSITIVITY = 0.005
 @export var JUMP_VELOCITY = 4.5
 @export var DOUBLE_JUMP_TRESHOLD = 0.65
@@ -17,20 +18,27 @@ enum MovementState {
 	Crouch
 }
 const action_list = {
-	'WALK': 'action_walk'
+	'WALK': 'action_walk',
+	'CROUCH': 'action_crouch',
 }
-var current_movement_state = MovementState.Idle
-var is_walk_btn_pressed = false
-
-
+const movement_list = {
+	'LEFT': 'move_left',
+	'RIGHT': 'move_right',
+	'FORWARD': 'move_forward',
+	'BACK': 'move_back'
+}
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 var input_movement = Vector2.ZERO
+var current_movement_state = MovementState.Idle
+var is_walk_btn_pressed = false
+var is_crouch_btn_pressed = false
 
 func _ready():
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _physics_process(delta):
-	toogle_switch("action_walk")
+	toogle_switch(action_list.WALK)
+	toogle_switch(action_list.CROUCH)
 	set_movement_state()
 	handle_jump(delta)
 	handle_movement()
@@ -55,6 +63,8 @@ func handle_movement():
 			current_speed = WOLK_SPEED
 		MovementState.Run:
 			current_speed = RUN_SPEED
+		MovementState.Crouch:
+			current_speed = CROUCH_SPEED
 	
 	velocity.x = direction.x * current_speed
 	velocity.z = direction.z * current_speed
@@ -68,18 +78,24 @@ func handle_jump(delta):
 		velocity.y -= JUMP_VELOCITY * delta
 
 func set_movement_state():
-	input_movement = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	input_movement = Input.get_vector(
+		movement_list.LEFT,
+		movement_list.RIGHT,
+		movement_list.FORWARD,
+		movement_list.BACK)
 	var is_idle = input_movement == Vector2.ZERO
 	
 	if is_idle:
 		current_movement_state = MovementState.Idle
 	elif is_walk_btn_pressed and !is_idle:
 		current_movement_state = MovementState.Walk
-	elif Input.is_action_pressed("action_crouch") and !is_idle:
+	elif is_crouch_btn_pressed and !is_idle:
 		current_movement_state = MovementState.Crouch
 	elif !is_walk_btn_pressed and !is_idle:
 		current_movement_state = MovementState.Run
 
 func toogle_switch(action_name: StringName):
-	if Input.is_action_just_pressed(action_name) and action_name == action_list['WALK']:
+	if Input.is_action_just_pressed(action_name) and action_name == action_list.WALK:
 		is_walk_btn_pressed = !is_walk_btn_pressed
+	elif Input.is_action_just_pressed(action_name) and action_name == action_list.CROUCH:
+		is_crouch_btn_pressed = !is_crouch_btn_pressed
