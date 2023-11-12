@@ -5,8 +5,9 @@ extends CharacterBody3D
 @export var CROUCH_SPEED = 2
 @export var SENSITIVITY = 0.005
 @export var JUMP_VELOCITY = 4.5
-@export var DOUBLE_JUMP_TRESHOLD = 0.65
-@export var DOUBLE_JUMP_ACC = 1.3
+@export var JUMP_AMOUNT = 2
+@export var JUMP_TRESHOLD = 0.65
+@export var JUMP_ACC = 1.3
 
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera
@@ -32,6 +33,7 @@ var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 var input_movement = Vector2.ZERO
 var direction = Vector3.ZERO
 var current_movement_state = MovementState.Idle
+var current_jump_amount = 0
 var is_walk_btn_pressed = false
 var is_crouch_btn_pressed = false
 const lerp_speed = 10.0
@@ -81,12 +83,18 @@ func handle_movement(delta):
 		head.position.y = lerp(head.position.y, 1.8, delta * lerp_speed)
 
 func handle_jump(delta):
-	if Input.is_action_just_pressed(action_list.JUMP) and is_on_floor():
+	var is_pressed = Input.is_action_just_pressed(action_list.JUMP)
+	
+	if is_pressed and is_on_floor():
 		velocity.y = JUMP_VELOCITY
-	elif Input.is_action_just_pressed(action_list.JUMP) and velocity.y >= JUMP_VELOCITY * DOUBLE_JUMP_TRESHOLD:
-		velocity.y = JUMP_VELOCITY * DOUBLE_JUMP_ACC
+		current_jump_amount += 1
+	elif is_pressed and current_jump_amount < JUMP_AMOUNT:
+		velocity.y = JUMP_VELOCITY * JUMP_ACC * current_jump_amount
+		current_jump_amount += 1
 	elif !is_on_floor():
 		velocity.y -= JUMP_VELOCITY * delta
+	elif is_on_floor():
+		current_jump_amount = 0
 
 func set_movement_state():
 	input_movement = Input.get_vector(
