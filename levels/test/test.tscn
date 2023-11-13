@@ -1,6 +1,6 @@
 [gd_scene load_steps=9 format=3 uid="uid://p4a4yh4md38n"]
 
-[ext_resource type="PackedScene" uid="uid://bw3megsg6ajjt" path="res://Objects/Player/player.tscn" id="1_0eoc4"]
+[ext_resource type="PackedScene" uid="uid://bw3megsg6ajjt" path="res://objects/player/player.tscn" id="1_vckpx"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_toywe"]
 albedo_color = Color(0.329412, 0.737255, 0.784314, 1)
@@ -24,7 +24,7 @@ sky_material = SubResource("ProceduralSkyMaterial_gjw48")
 background_mode = 2
 sky = SubResource("Sky_7mxia")
 
-[node name="General" type="Node3D"]
+[node name="Test" type="Node3D"]
 
 [node name="Map" type="Node3D" parent="."]
 
@@ -51,7 +51,8 @@ transform = Transform3D(-0.422618, -0.694272, 0.582563, 2.24196e-16, 0.642788, 0
 shadow_enabled = true
 shadow_opacity = 0.75
 
-[node name="Player" parent="." instance=ExtResource("1_0eoc4")]
-
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_n4opm")
+
+[node name="Player" parent="." instance=ExtResource("1_vckpx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.210277, -7.63685e-07, -1.5519)
