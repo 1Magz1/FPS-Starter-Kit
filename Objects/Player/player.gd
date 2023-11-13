@@ -25,6 +25,7 @@ const action_list = {
 	'WALK': 'action_walk',
 	'CROUCH': 'action_crouch',
 	'JUMP': 'action_jump',
+	'SHOOT': 'action_shoot',
 }
 const movement_list = {
 	'LEFT': 'move_left',
@@ -41,6 +42,8 @@ var is_walk_btn_pressed = false
 var is_crouch_btn_pressed = false
 const lerp_speed = 10.0
 
+signal player_shoot
+
 func _ready():
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -50,6 +53,7 @@ func _physics_process(delta):
 	set_movement_state()
 	handle_jump(delta)
 	handle_movement(delta)
+	action_shoot()
 	move_and_slide()
 
 func _unhandled_input(event):
@@ -132,3 +136,7 @@ func get_current_speed()-> int:
 		MovementState.Crouch:
 			current_speed = CROUCH_SPEED
 	return current_speed
+
+func action_shoot():
+	if Input.is_action_just_pressed(action_list.SHOOT):
+		emit_signal("player_shoot")

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://w2bpye7p153h"]
+
+[ext_resource type="Script" path="res://objects/weapon/base_weapon/base_weapon.gd" id="1_lkppv"]
+
+[node name="BaseWeapon" type="Node3D"]
+script = ExtResource("1_lkppv")
+
+[node name="MeshWrap" type="Node3D" parent="."]
