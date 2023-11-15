@@ -34,6 +34,10 @@ const movement_list = {
 	'FORWARD': 'move_forward',
 	'BACK': 'move_backward'
 }
+const weapon_hotkeys = {
+	49: 0,
+	50: 1
+}
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 var input_movement := Vector2.ZERO
 var direction := Vector3.ZERO
@@ -41,9 +45,11 @@ var current_movement_state: MovementState = MovementState.Idle
 var current_jump_amount := 0
 var is_walk_btn_pressed := false
 var is_crouch_btn_pressed := false
+
 const lerp_speed := 10.0
 
 signal player_shoot
+signal player_hotkey
 
 func _ready():
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -52,17 +58,14 @@ func _physics_process(delta):
 	toogle_switch(action_list.WALK)
 	toogle_switch(action_list.CROUCH)
 	set_movement_state()
-	handle_jump(delta)
-	handle_movement(delta)
+	handler_jump(delta)
+	handler_movement(delta)
 	action_shoot()
 	move_and_slide()
 
 func _unhandled_input(event):
-	if event is InputEventMouseMotion:
-		player.rotate_y(-event.relative.x * SENSITIVITY)
-		
-		camera.rotate_x(-event.relative.y * SENSITIVITY)
-		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-85), deg_to_rad(85))
+	camera_move(event)
+	handler_hotkeys(event)
 
 func toogle_switch(action_name: StringName):
 	var is_pressed = Input.is_action_just_pressed(action_name)
@@ -94,7 +97,7 @@ func set_movement_state():
 	elif is_idle:
 		current_movement_state = MovementState.Idle
 
-func handle_jump(delta):
+func handler_jump(delta):
 	var is_pressed = Input.is_action_just_pressed(action_list.JUMP)
 	
 	if is_pressed and is_on_floor():
@@ -108,7 +111,7 @@ func handle_jump(delta):
 	elif is_on_floor():
 		current_jump_amount = 0
 
-func handle_movement(delta):
+func handler_movement(delta):
 	var move_transform = (player.transform.basis * Vector3(input_movement.x, 0 , input_movement.y)).normalized()
 	direction = lerp(direction, move_transform, delta * lerp_speed)
 	
@@ -137,6 +140,17 @@ func get_current_speed()-> int:
 		MovementState.Crouch:
 			current_speed = CROUCH_SPEED
 	return current_speed
+
+func camera_move(event):
+	if event is InputEventMouseMotion:
+		player.rotate_y(-event.relative.x * SENSITIVITY)
+		
+		camera.rotate_x(-event.relative.y * SENSITIVITY)
+		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-85), deg_to_rad(85))
+
+func handler_hotkeys(event):
+	if event is InputEventKey and event.pressed and event.keycode in weapon_hotkeys:
+		emit_signal("player_hotkey", weapon_hotkeys[event.keycode])
 
 func action_shoot():
 	if Input.is_action_just_pressed(action_list.SHOOT):
