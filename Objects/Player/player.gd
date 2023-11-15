@@ -1,19 +1,20 @@
 extends CharacterBody3D
 
-@export var RUN_SPEED = 5
-@export var WOLK_SPEED = 3
-@export var CROUCH_SPEED = 2
-@export var SENSITIVITY = 0.005
-@export var JUMP_VELOCITY = 4.5
-@export var JUMP_AMOUNT = 2
-@export var JUMP_TRESHOLD = 0.65
-@export var JUMP_ACC = 1.3
+@export var RUN_SPEED := 5
+@export var WOLK_SPEED := 3
+@export var CROUCH_SPEED := 2
+@export var SENSITIVITY := 0.005
+@export var JUMP_VELOCITY := 4.5
+@export var JUMP_AMOUNT := 2
+@export var JUMP_TRESHOLD := 0.65
+@export var JUMP_ACC := 1.3
 
+@onready var player: CharacterBody3D = $"."
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera
-@onready var idle_collision = $IdleCollision
-@onready var crouch_collision = $CrouchCollision
-@onready var ray_cast = $RayCast
+@onready var idle_collision: CollisionShape3D = $IdleCollision
+@onready var crouch_collision: CollisionShape3D = $CrouchCollision
+@onready var ray_cast: RayCast3D = $RayCast
 
 enum MovementState {
 	Idle,
@@ -34,13 +35,13 @@ const movement_list = {
 	'BACK': 'move_backward'
 }
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
-var input_movement = Vector2.ZERO
-var direction = Vector3.ZERO
-var current_movement_state = MovementState.Idle
-var current_jump_amount = 0
-var is_walk_btn_pressed = false
-var is_crouch_btn_pressed = false
-const lerp_speed = 10.0
+var input_movement := Vector2.ZERO
+var direction := Vector3.ZERO
+var current_movement_state: MovementState = MovementState.Idle
+var current_jump_amount := 0
+var is_walk_btn_pressed := false
+var is_crouch_btn_pressed := false
+const lerp_speed := 10.0
 
 signal player_shoot
 
@@ -58,7 +59,7 @@ func _physics_process(delta):
 
 func _unhandled_input(event):
 	if event is InputEventMouseMotion:
-		head.rotate_y(-event.relative.x * SENSITIVITY)
+		player.rotate_y(-event.relative.x * SENSITIVITY)
 		
 		camera.rotate_x(-event.relative.y * SENSITIVITY)
 		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-85), deg_to_rad(85))
@@ -103,12 +104,12 @@ func handle_jump(delta):
 		velocity.y = JUMP_VELOCITY * JUMP_ACC * current_jump_amount
 		current_jump_amount += 1
 	elif !is_on_floor():
-		velocity.y -= JUMP_VELOCITY * delta
+		velocity.y -= JUMP_VELOCITY * delta * 2
 	elif is_on_floor():
 		current_jump_amount = 0
 
 func handle_movement(delta):
-	var move_transform = (head.transform.basis * Vector3(input_movement.x, 0 , input_movement.y)).normalized()
+	var move_transform = (player.transform.basis * Vector3(input_movement.x, 0 , input_movement.y)).normalized()
 	direction = lerp(direction, move_transform, delta * lerp_speed)
 	
 	velocity.x = direction.x * get_current_speed()
