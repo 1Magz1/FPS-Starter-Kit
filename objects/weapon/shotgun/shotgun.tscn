@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://c0iegf7vi1j34"]
+
+[ext_resource type="PackedScene" uid="uid://w2bpye7p153h" path="res://objects/weapon/base_weapon/base_weapon.tscn" id="1_103yr"]
+[ext_resource type="PackedScene" uid="uid://tkp8qdpcgfkf" path="res://assets/models/shotgun/shotgun.glb" id="2_3u7yk"]
+
+[node name="Shotgun" instance=ExtResource("1_103yr")]
+
+[node name="shotgun" parent="MeshWrap" index="0" instance=ExtResource("2_3u7yk")]
