@@ -8,6 +8,7 @@ extends CharacterBody3D
 @export var JUMP_AMOUNT := 2
 @export var JUMP_TRESHOLD := 0.65
 @export var JUMP_ACC := 1.3
+@export var PAD_SENSITIVITY := 0.3
 
 @onready var player: CharacterBody3D = $"."
 @onready var head: Node3D = $Head
@@ -27,6 +28,8 @@ const action_list = {
 	'CROUCH': 'action_crouch',
 	'JUMP': 'action_jump',
 	'SHOOT': 'action_shoot',
+	'PREV_WEAPON': 'action_prev_weapon',
+	'NEXT_WEAPON': 'action_next_weapon',
 }
 const movement_list = {
 	'LEFT': 'move_left',
@@ -38,6 +41,7 @@ const weapon_hotkeys = {
 	49: 0,
 	50: 1
 }
+
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 var input_movement := Vector2.ZERO
 var direction := Vector3.ZERO
@@ -45,13 +49,24 @@ var current_movement_state: MovementState = MovementState.Idle
 var current_jump_amount := 0
 var is_walk_btn_pressed := false
 var is_crouch_btn_pressed := false
+var timer := Timer.new()
+var current_player_switch_signal := 'player_switch_prev_weapon'
 
 const lerp_speed := 10.0
 
+const emit_signal_list = {
+	'SHOOT': 'player_shoot',
+	'HOTKEY': 'player_shoot',
+	'PREV': 'player_switch_prev_weapon',
+	'NEXT': 'player_switch_next_weapon'
+}
 signal player_shoot
 signal player_hotkey
+signal player_switch_next_weapon
+signal player_switch_prev_weapon
 
 func _ready():
+	setup_timer()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _physics_process(delta):
@@ -60,12 +75,13 @@ func _physics_process(delta):
 	set_movement_state()
 	handler_jump(delta)
 	handler_movement(delta)
-	action_shoot()
 	move_and_slide()
 
 func _unhandled_input(event):
 	camera_move(event)
 	handler_hotkeys(event)
+	action_switch_weapon(event)
+	action_shoot()
 
 func toogle_switch(action_name: StringName):
 	var is_pressed = Input.is_action_just_pressed(action_name)
@@ -150,8 +166,33 @@ func camera_move(event):
 
 func handler_hotkeys(event):
 	if event is InputEventKey and event.pressed and event.keycode in weapon_hotkeys:
-		emit_signal("player_hotkey", weapon_hotkeys[event.keycode])
+		emit_signal(emit_signal_list.HOTKEY, weapon_hotkeys[event.keycode])
 
 func action_shoot():
 	if Input.is_action_just_pressed(action_list.SHOOT):
-		emit_signal("player_shoot")
+		emit_signal(emit_signal_list.SHOOT)
+
+func setup_timer():
+	add_child(timer)
+	timer.wait_time = 0.08
+	timer.one_shot = true
+	timer.connect("timeout", _on_timer_timeout)
+
+func _on_timer_timeout():
+	emit_signal(current_player_switch_signal)
+
+func action_switch_weapon(event):
+	# For macbook
+	if event is InputEventPanGesture:
+		if event.delta.y > PAD_SENSITIVITY:
+			current_player_switch_signal = emit_signal_list.NEXT
+			timer.start()
+		elif event.delta.y < -PAD_SENSITIVITY:
+			current_player_switch_signal = emit_signal_list.PREV
+			timer.start()
+	# For PC
+	else:
+		if Input.is_action_just_pressed(action_list.NEXT_WEAPON):
+			emit_signal(emit_signal_list.NEXT)
+		elif Input.is_action_just_pressed(action_list.PREV_WEAPON):
+			emit_signal(emit_signal_list.PREV)
