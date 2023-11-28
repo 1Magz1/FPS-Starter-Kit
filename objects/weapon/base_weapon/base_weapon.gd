@@ -6,4 +6,5 @@ func _ready():
 	emitter.player_shoot.connect(shoot)
 
 func shoot():
-	print("shoot")
+	if(visible):
+		print("shoot")
