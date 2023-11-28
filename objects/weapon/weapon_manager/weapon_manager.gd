@@ -14,6 +14,8 @@ func _ready():
 	var emitter = parent.get_node("Player")
 	
 	emitter.player_hotkey.connect(set_current_weapon)
+	emitter.player_switch_next_weapon.connect(next_weapon)
+	emitter.player_switch_prev_weapon.connect(prev_weapon)
 	
 	set_current_weapon(current_index)
 
