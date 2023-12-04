@@ -56,7 +56,7 @@ const lerp_speed := 10.0
 
 const emit_signal_list = {
 	'SHOOT': 'player_shoot',
-	'HOTKEY': 'player_shoot',
+	'HOTKEY': 'player_hotkey',
 	'PREV': 'player_switch_prev_weapon',
 	'NEXT': 'player_switch_next_weapon'
 }
