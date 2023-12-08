@@ -1,6 +1,6 @@
-[gd_scene load_steps=9 format=3 uid="uid://p4a4yh4md38n"]
+[gd_scene load_steps=9 format=3 uid="uid://c715qxgyc55pf"]
 
-[ext_resource type="PackedScene" uid="uid://bw3megsg6ajjt" path="res://objects/player/player.tscn" id="1_vckpx"]
+[ext_resource type="PackedScene" uid="uid://bw3megsg6ajjt" path="res://objects/player/player.tscn" id="1_p58et"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_toywe"]
 albedo_color = Color(0.329412, 0.737255, 0.784314, 1)
@@ -28,13 +28,13 @@ sky = SubResource("Sky_7mxia")
 
 [node name="Map" type="Node3D" parent="."]
 
-[node name="CSGBox3D" type="CSGBox3D" parent="Map"]
+[node name="Land" type="CSGBox3D" parent="Map"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, -0.05, 2.08165e-12)
 use_collision = true
 size = Vector3(100, 0.1, 100)
 material = SubResource("StandardMaterial3D_toywe")
 
-[node name="CSGBox3D" type="CSGBox3D" parent="Map/CSGBox3D"]
+[node name="CSGBox3D" type="CSGBox3D" parent="Map/Land"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, -0.05, 2.08165e-12)
 use_collision = true
 size = Vector3(100, 0.1, 100)
@@ -60,5 +60,5 @@ shadow_opacity = 0.75
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_n4opm")
 
-[node name="Player" parent="." instance=ExtResource("1_vckpx")]
+[node name="Player" parent="." instance=ExtResource("1_p58et")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.210277, -7.63685e-07, -1.5519)
