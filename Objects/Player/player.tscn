@@ -36,7 +36,9 @@ disabled = true
 [node name="Head" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 1.8, 2.08165e-12)
 
-[node name="Camera" type="Camera3D" parent="Head"]
+[node name="Eyes" type="Node3D" parent="Head"]
+
+[node name="Camera" type="Camera3D" parent="Head/Eyes"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 0, 2.08165e-12)
 
-[node name="WeaponManager" parent="Head/Camera" instance=ExtResource("2_a8m51")]
+[node name="WeaponManager" parent="Head/Eyes/Camera" instance=ExtResource("2_a8m51")]

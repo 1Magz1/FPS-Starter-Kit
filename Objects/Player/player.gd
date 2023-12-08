@@ -9,19 +9,22 @@ extends CharacterBody3D
 @export var JUMP_TRESHOLD := 0.65
 @export var JUMP_ACC := 1.3
 @export var PAD_SENSITIVITY := 0.3
+@export var HEAD_BOB := true
 
 @onready var player: CharacterBody3D = $"."
 @onready var head: Node3D = $Head
-@onready var camera: Camera3D = $Head/Camera
+@onready var camera: Camera3D = $Head/Eyes/Camera
 @onready var idle_collision: CollisionShape3D = $IdleCollision
 @onready var crouch_collision: CollisionShape3D = $CrouchCollision
 @onready var ray_cast: RayCast3D = $RayCast
+@onready var eyes = $Head/Eyes
 
 enum MovementState {
 	Idle,
 	Walk,
 	Run,
-	Crouch
+	IdleCrouch,
+	WalkCrouch
 }
 const action_list = {
 	'WALK': 'action_walk',
@@ -41,6 +44,13 @@ const weapon_hotkeys = {
 	49: 0,
 	50: 1
 }
+const bobing_intensity_list = {
+	0: 0,
+	1: 1.2,
+	2: 2,
+	3: 0,
+	4: 0.3
+}
 
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 var input_movement := Vector2.ZERO
@@ -51,6 +61,9 @@ var is_walk_btn_pressed := false
 var is_crouch_btn_pressed := false
 var timer := Timer.new()
 var current_player_switch_signal := 'player_switch_prev_weapon'
+var head_bobing_vactor = Vector2.ZERO
+var head_bobing_intensity := 20.3
+var head_bobing_value := 0.0
 
 const lerp_speed := 10.0
 
@@ -104,13 +117,15 @@ func set_movement_state():
 		movement_list.BACK)
 	var is_idle = input_movement == Vector2.ZERO
 	
-	if is_crouch_btn_pressed:
-		current_movement_state = MovementState.Crouch
+	if is_crouch_btn_pressed and is_idle:
+		current_movement_state = MovementState.IdleCrouch
+	if is_crouch_btn_pressed and !is_idle:
+		current_movement_state = MovementState.WalkCrouch
 	elif is_walk_btn_pressed and !is_idle:
 		current_movement_state = MovementState.Walk
 	elif !is_walk_btn_pressed and !is_idle:
 		current_movement_state = MovementState.Run
-	elif is_idle:
+	elif is_idle && !is_crouch_btn_pressed && !is_walk_btn_pressed:
 		current_movement_state = MovementState.Idle
 
 func handler_jump(delta):
@@ -130,18 +145,23 @@ func handler_jump(delta):
 func handler_movement(delta):
 	var move_transform = (player.transform.basis * Vector3(input_movement.x, 0 , input_movement.y)).normalized()
 	direction = lerp(direction, move_transform, delta * lerp_speed)
+	var current_person_height := 1.3 if current_movement_state == MovementState.IdleCrouch || current_movement_state == MovementState.WalkCrouch else 1.8
 	
 	velocity.x = direction.x * get_current_speed()
 	velocity.z = direction.z * get_current_speed()
 	
-	if current_movement_state == MovementState.Crouch:
-		head.position.y = lerp(head.position.y, 1.3, delta * lerp_speed)
+	if current_movement_state == MovementState.IdleCrouch || current_movement_state == MovementState.WalkCrouch:
 		idle_collision.disabled = true
 		crouch_collision.disabled = false
 	else:
-		head.position.y = lerp(head.position.y, 1.8, delta * lerp_speed)
 		idle_collision.disabled = false
 		crouch_collision.disabled = true
+	
+	head.position.y = lerp(head.position.y, current_person_height, delta * lerp_speed)
+	
+	if HEAD_BOB:
+		head_bobbing(delta)
+	
 
 func get_current_speed()-> int:
 	var current_speed = 0
@@ -153,7 +173,7 @@ func get_current_speed()-> int:
 			current_speed = WOLK_SPEED
 		MovementState.Run:
 			current_speed = RUN_SPEED
-		MovementState.Crouch:
+		MovementState.WalkCrouch:
 			current_speed = CROUCH_SPEED
 	return current_speed
 
@@ -196,3 +216,13 @@ func action_switch_weapon(event):
 			emit_signal(emit_signal_list.NEXT)
 		elif Input.is_action_just_pressed(action_list.PREV_WEAPON):
 			emit_signal(emit_signal_list.PREV)
+
+func head_bobbing(delta):
+	var intensity = bobing_intensity_list[current_movement_state]
+	head_bobing_value += head_bobing_intensity * delta
+	
+	head_bobing_vactor.y = sin(head_bobing_value)
+	head_bobing_vactor.x = sin(head_bobing_value / 2) * 0.5
+	
+	eyes.position.x = lerp(eyes.position.x, (head_bobing_vactor.x * 0.2) * intensity, delta * lerp_speed)
+	eyes.position.y = lerp(eyes.position.y, (head_bobing_vactor.y * 0.1) * intensity, delta * lerp_speed)
